@@ -1,0 +1,16 @@
+{
+  "timeZone": "America/Denver",
+  "dependencies": {
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "dataStudio": {
+    "name": "Square Connector",
+    "logoUrl": "https://raw.githubusercontent.com/npm/logos/master/npm%20square/n-64.png",
+    "company": "City Brew Coffee",
+    "companyUrl": "https://citybrew.com",
+    "addonUrl": "https://github.com/googledatastudio/community-connectors/tree/master/npm-downloads#readme",
+    "supportUrl": "https://github.com/googledatastudio/community-connectors/issues",
+    "description": "Get npm package download counts.",
+    "sources": ["npm"]
+  }
+}
