@@ -1,3 +1,5 @@
+var cc = DataStudioApp.createCommunityConnector();
+
 function getOrdersFields() {
   var fields = cc.getFields();
   var types = cc.FieldType;
@@ -135,9 +137,8 @@ function getSchema(request) {
 
 // https://developers.google.com/datastudio/connector/reference#getdata
 function getData(request) {
-  request.configParams = validateConfig(request.configParams);
 
-  var requestedFields = getFields().forIds(
+  var requestedFields = getOrdersFields().forIds(
     request.fields.map(function(field) {
       return field.name;
     })
@@ -161,46 +162,7 @@ function getData(request) {
   };
 }
 
-function fetchDataFromSearchOrdersEndpoint(request) {
-      var url = 'https://connect.squareup.com/v2/orders/search';
-      var data = {
-        'query': {
-          'filter': {
-            'date_time_filter': {
-              'created_at': {
-                'startAt': request.dateRange.startDate + 'T00:00:00-06:00',
-                'endAt': request.dateRange.endDate + 'T00:00:00-06:00',
-              }
-            }
-          },
-          'sort': {
-            'sort_field': 'CREATED_AT'
-          }
-        }
-      };
-      var options = {
-        'method' : 'post',
-        'contentType': 'application/json',
-        'payload' : JSON.stringify(data),
-        'headers': {
-          'Authorization': 'Bearer ' + getOAuthService().getAccessToken()
-        },
-      };
-  var responseString = UrlFetchApp.fetch(url);
-  
-  var response = JSON.parse(responseString);
-  
-  if (response.errors === undefined) {
-    return response.orders;
-  } else {
-    cc.newUserError()
-      .setDebugText('Error fetching data from API. Exception details: ' + response.errors[0])
-      .setText(
-        'The connector has encountered an unrecoverable error. Please try again later, or file an issue if this error persists.'
-      )
-      .throwException();
-  }
-}
+
 
 function getFormattedOrders(response, requestedFields) {
   var data = response.map(function(order){
@@ -216,39 +178,39 @@ function formatOrder(requestedFields, order) {
       case 'location':
         return order.location_id;
       case 'date':
-        return formatDate(new Date(order.created_at), 'MDT', 'yyyyMMdd');
+        return Utilities.formatDate(new Date(order.created_at), 'MDT', 'yyyyMMdd');
       case 'hour':
-        return formatDate(new Date(order.created_at), 'MDT', 'HH');
+        return Utilities.formatDate(new Date(order.created_at), 'MDT', 'HH');
       case 'minute':
-        return formatDate(new Date(order.created_at), 'MDT', 'mm');
+        return Utilities.formatDate(new Date(order.created_at), 'MDT', 'mm');
       case 'customerId':
         return order.customer_id;
       case 'source':
-        return order.source.name;
+        return order.source !== undefined ? order.source.name : 'Not Set';
       case 'reference_id':
         return order.reference_id;
       case 'state':
         return order.state;
       case 'totalMoney':
-        return order.net_amounts.total_money.amount / 100;
+        return order.net_amounts !== undefined ? order.net_amounts.total_money.amount / 100 : 0;
       case 'discountMoney':
-        return order.net_amounts.discount_money.amount / 100;
+        return order.net_amounts !== undefined ? order.net_amounts.discount_money.amount / 100 : 0;
       case 'taxMoney':
-        return order.net_amounts.tax_money.amount / 100;
+        return order.net_amounts !== undefined ? order.net_amounts.tax_money.amount / 100 : 0;
       case 'serviceChargeMoney':
-        return order.net_amounts.service_charge_money.amount / 100;
+        return order.net_amounts !== undefined ? order.net_amounts.service_charge_money.amount / 100 : 0;
       case 'tipMoney':
-        return order.net_amounts.tip_money.amount / 100;
+        return order.net_amounts !== undefined ? order.net_amounts.tip_money.amount / 100 : 0;
       case 'refundTotalMoney':
-        return order.return_amounts.tip_money.amount / 100;
+        return order.return_amounts !== undefined ? order.return_amounts.tip_money.amount / 100 : 0;
       case 'refundDiscountMoney':
-        return order.return_amounts.discount_money.amount / 100;
+        return order.return_amounts !== undefined ? order.return_amounts.discount_money.amount / 100 : 0;
       case 'refundTaxMoney':
-        return order.return_amounts.tax_money.amount / 100;
+        return order.return_amounts !== undefined ? order.return_amounts.tax_money.amount / 100 : 0;
       case 'refundServiceChargeMoney':
-        return order.return_amounts.service_charge_money.amount / 100;
+        return order.return_amounts !== undefined ? order.return_amounts.service_charge_money.amount / 100 : 0;
       case 'refundTipMoney':
-        return order.return_amounts.tip_money.amount / 100;
+        return order.return_amounts !== undefined ?  order.return_amounts.tip_money.amount / 100 : 0;
       default:
         return cc
           .newUserError()
@@ -265,25 +227,37 @@ function formatOrder(requestedFields, order) {
 }
 
 function getConfig() {
+  var locations = fetchDataFromListLocationsEndpoint();
+  
   var config = cc.getConfig();
   
   var option1 = config.newOptionBuilder()
   .setLabel("Orders")
   .setValue("orders");
 
-//var option2 = config.newOptionBuilder()
-  //.setLabel("Line Items")
-  //.setValue("line_items");
+/*var option2 = config.newOptionBuilder()
+  .setLabel("Line Items")
+  .setValue("line_items");
+  */
+  
+  var locationSelector = config.newSelectMultiple()
+  .setId("locations")
+  .setName("Locations")
+  .setHelpText("Select the Locations you wish to pull data from")
+  
+  locations.forEach(function(location) {
+    locationSelector.addOption(config.newOptionBuilder()
+                              .setLabel(location.name)
+                              .setValue(location.id));
+  });
 
 config.newSelectSingle()
   .setId("data_type")
   .setName("Data Type")
   .setHelpText("Select the data type you're interested in.")
-  .setAllowOverride(true)
   .addOption(option1)
   //.addOption(option2);
   
-  config.newSelectSingle();
   config.setDateRangeRequired(true);
 
   return config.build();

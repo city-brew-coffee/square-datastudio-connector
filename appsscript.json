@@ -1,6 +1,11 @@
 {
   "timeZone": "America/Denver",
   "dependencies": {
+    "libraries": [{
+      "userSymbol": "OAuth2",
+      "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+      "version": "33"
+    }]
   },
   "exceptionLogging": "STACKDRIVER",
   "dataStudio": {
@@ -10,8 +15,7 @@
     "companyUrl": "https://citybrew.com",
     "addonUrl": "https://github.com/city-brew-coffee/square-datastudio-connector#readme",
     "supportUrl": "https://github.com/city-brew-coffee/square-datastudio-connector/issues",
-    "description": "Get various info from Square's Connect APIs",
-    "sources": ["SQUARE"],
+    "description": "Get various info from Square\u0027s Connect APIs",
     "authType": ["OAUTH2"],
     "feeType": ["FREE"]
   }

@@ -36,7 +36,7 @@ function getOAuthService() {
     .setClientSecret('sq0csp-qMhwmMvo6gKlITtRPP3fwxdii4tPwBrDD4edjSPFx7c')
     .setPropertyStore(PropertiesService.getUserProperties())
     .setCallbackFunction('authCallback')
-    .setScope('MERCHANT_PROFILE_READ PAYMENTS_READ SETTLEMENTS_READ BANK_ACCOUNTS_READ');
+    .setScope('MERCHANT_PROFILE_READ PAYMENTS_READ SETTLEMENTS_READ BANK_ACCOUNTS_READ ORDERS_READ CUSTOMERS_READ EMPLOYEES_READ INVENTORY_READ ITEMS_READ TIMECARDS_READ TIMECARDS_SETTINGS_READ');
 };
 
 /**
@@ -52,3 +52,11 @@ function authCallback(request) {
     return HtmlService.createHtmlOutput('Denied. You can close this tab');
   };
 };
+
+function get3PAuthorizationUrls() {
+  return getOAuthService().getAuthorizationUrl();
+}
+
+function isAdminUser() {
+  return true;
+}
