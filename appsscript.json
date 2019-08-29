@@ -5,12 +5,14 @@
   "exceptionLogging": "STACKDRIVER",
   "dataStudio": {
     "name": "Square Connector",
-    "logoUrl": "https://raw.githubusercontent.com/npm/logos/master/npm%20square/n-64.png",
+    "logoUrl": "https://raw.githubusercontent.com/city-brew-coffee/square-datastudio-connector/master/square_small.png",
     "company": "City Brew Coffee",
     "companyUrl": "https://citybrew.com",
-    "addonUrl": "https://github.com/googledatastudio/community-connectors/tree/master/npm-downloads#readme",
-    "supportUrl": "https://github.com/googledatastudio/community-connectors/issues",
-    "description": "Get npm package download counts.",
-    "sources": ["npm"]
+    "addonUrl": "https://github.com/city-brew-coffee/square-datastudio-connector#readme",
+    "supportUrl": "https://github.com/city-brew-coffee/square-datastudio-connector/issues",
+    "description": "Get various info from Square's Connect APIs",
+    "sources": ["SQUARE"],
+    "authType": ["OAUTH2"],
+    "feeType": ["FREE"]
   }
 }
