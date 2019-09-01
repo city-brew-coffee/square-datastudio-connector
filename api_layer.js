@@ -1,26 +1,14 @@
-function fetchDataFromSearchOrdersEndpoint(request, cursor) {
-  var locationsGroups = [];
-  var locations = request.configParams.locations.split(',');
-  if (locations.length > 10) {
-    for (var i=0; i<locations.length / 10; i++) {
-      locationsGroups[i] = locations.slice(i * 10, (i+1) * 10);
-    }
-  } else {
-    locationsGroups[0] = locations;
-  }
+function fetchDataFromSearchOrdersEndpoint(locations, startDate, endDate, cursor) {
   
-  var orders = [];
-  
-  for (var group = 0; group<locationsGroups.length; group++) {
       var url = 'https://connect.squareup.com/v2/orders/search';
       var data = {
-        'location_ids': locationsGroups[group],
+        'location_ids': locations,
         'query': {
           'filter': {
             'date_time_filter': {
               'created_at': {
-                'startAt': request.dateRange.startDate + 'T00:00:00-06:00',
-                'endAt': request.dateRange.endDate + 'T00:00:00-06:00',
+                'startAt': startDate + 'T00:00:00-06:00',
+                'endAt': endDate + 'T00:00:00-06:00',
               }
             }
           },
@@ -46,8 +34,14 @@ function fetchDataFromSearchOrdersEndpoint(request, cursor) {
   var response = JSON.parse(responseString); 
    
   if (response.errors === undefined) {
-    if (response.orders !== undefined) {
-      orders = orders.concat(response.orders);
+    if (response.cursor !== undefined) {
+      return response.orders.concat(fetchDataFromSearchOrdersEndpoint(locations, startDate, endDate, response.cursor));
+    } else {
+      if (response.orders !== undefined) {
+        return response.orders;
+      } else {
+        return [];
+      }
     }
   } else {
     console.error(response.errors[0]);
@@ -58,11 +52,6 @@ function fetchDataFromSearchOrdersEndpoint(request, cursor) {
       )
       .throwException();
   }
-  }
- 
-
-  return orders;
-  
 }
 
 function fetchDataFromListLocationsEndpoint() {
@@ -106,6 +95,39 @@ function fetchDataFromRetrieveCustomersEndpoint(custId) {
   if (response.errors === undefined) {
     return response.locations;
   } else {
+    cc.newUserError()
+      .setDebugText('Error fetching data from API. Exception details: ' + response.errors[0])
+      .setText(
+        'The connector has encountered an unrecoverable error. Please try again later, or file an issue if this error persists.'
+      )
+      .throwException();
+  }
+}
+
+function fetchDataFromBatchRetrieveEndpoint(objectIds) {
+      var url = 'https://connect.squareup.com/v2/catalog/batch-retrieve';
+  
+  var data = {
+        'object_ids': objectIds,
+    'include_related_objects': true
+      };
+      var options = {
+        'method' : 'post',
+        'contentType': 'application/json',
+        'payload' : JSON.stringify(data),
+        'headers': {
+          'Authorization': 'Bearer ' + getOAuthService().getAccessToken()
+        },
+      };
+  
+  var responseString = UrlFetchApp.fetch(url, options);
+  
+  var response = JSON.parse(responseString);
+  
+  if (response.errors === undefined) {
+    return response.objects.concat(response.related_objects);
+  } else {
+    console.error(response);
     cc.newUserError()
       .setDebugText('Error fetching data from API. Exception details: ' + response.errors[0])
       .setText(
